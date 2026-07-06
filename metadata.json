@@ -1,0 +1,6 @@
+{
+  "name": "Diet & Nutrition Tracker",
+  "description": "A premium, fully-featured diet and nutrition management platform with macro calculators, weight tracking, water logging, meal planning, and an AI diet coach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
