@@ -163,7 +163,25 @@ export default function App() {
 
   const [groceryList, setGroceryList] = useState<GroceryItem[]>(() => {
     const saved = localStorage.getItem("diet_grocery_list");
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const seenIds = new Set<string>();
+          return parsed.map((item, idx) => {
+            if (!item.id || seenIds.has(item.id)) {
+              const uniqueId = `g_item_${Date.now()}_${idx}_${Math.floor(Math.random() * 1000000)}`;
+              seenIds.add(uniqueId);
+              return { ...item, id: uniqueId };
+            }
+            seenIds.add(item.id);
+            return item;
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse grocery list", e);
+      }
+    }
     return [
       { id: "g1", name: "Avocado", category: "Fruits", checked: false, amount: "2 medium" },
       { id: "g2", name: "Chicken Breast", category: "Meat", checked: false, amount: "500g" },
@@ -204,13 +222,66 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
     localStorage.setItem("diet_grocery_list", JSON.stringify(groceryList));
   }, [groceryList]);
 
+  // Fetch AI daily nutrition recommendation
+  const [aiNutritionTip, setAiNutritionTip] = useState<string>("");
+  const [loadingAiTip, setLoadingAiTip] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchAiTip = async () => {
+      setLoadingAiTip(true);
+      try {
+        const todayStr = new Date().toISOString().split("T")[0];
+        let eatenCalories = 0;
+        let eatenProtein = 0;
+        let eatenCarbs = 0;
+        let eatenFat = 0;
+
+        mealLogs.forEach((log) => {
+          if (log.timestamp === todayStr) {
+            log.foods.forEach((loggedFood) => {
+              const f = loggedFood.food;
+              const servings = loggedFood.servings;
+              eatenCalories += f.calories * servings;
+              eatenProtein += f.protein * servings;
+              eatenCarbs += f.carbs * servings;
+              eatenFat += f.fat * servings;
+            });
+          }
+        });
+
+        const todayMacros = {
+          calories: Math.round(eatenCalories),
+          protein: Math.round(eatenProtein),
+          carbs: Math.round(eatenCarbs),
+          fat: Math.round(eatenFat)
+        };
+
+        const res = await fetch("/api/ai/nutrition-analysis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userProfile: profile, todayMacros })
+        });
+        const data = await res.json();
+        if (data.recommendation) {
+          setAiNutritionTip(data.recommendation);
+        }
+      } catch (err) {
+        console.error("Error fetching AI nutrition tip:", err);
+      } finally {
+        setLoadingAiTip(false);
+      }
+    };
+
+    fetchAiTip();
+  }, [mealLogs, profile]);
+
   const handleAddGroceryItem = (name: string, category: GroceryItem["category"], amount?: string) => {
     setGroceryList(prev => {
       const exists = prev.find(item => item.name.toLowerCase() === name.toLowerCase());
       if (exists) return prev;
       return [
         {
-          id: `g_item_${Date.now()}`,
+          id: `g_item_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
           name,
           category,
           checked: false,
@@ -291,7 +362,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
     setMealLogs((prev) => {
       const existing = prev.find((log) => log.mealType === mealType && log.timestamp === today);
       const newLoggedFood = {
-        id: `lf_${Date.now()}`,
+        id: `lf_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
         food,
         servings,
       };
@@ -304,7 +375,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
         );
       } else {
         const newLog: MealLog = {
-          id: `meal_log_${Date.now()}`,
+          id: `meal_log_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
           mealType,
           foods: [newLoggedFood],
           timestamp: today,
@@ -333,7 +404,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
   const handleAddWater = (amountMl: number) => {
     const today = new Date().toISOString().split("T")[0];
     const newLog: WaterLog = {
-      id: `wat_${Date.now()}`,
+      id: `wat_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       amountMl,
       timestamp: today,
     };
@@ -343,7 +414,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
   const handleAddExercise = (type: string, duration: number, calories: number) => {
     const today = new Date().toISOString().split("T")[0];
     const newLog: ExerciseLog = {
-      id: `ex_${Date.now()}`,
+      id: `ex_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       type,
       durationMin: duration,
       caloriesBurned: calories,
@@ -355,7 +426,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
   const handleAddWeight = (weight: number) => {
     const today = new Date().toISOString().split("T")[0];
     const newLog: WeightLog = {
-      id: `w_log_${Date.now()}`,
+      id: `w_log_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       weight,
       timestamp: today,
     };
@@ -397,7 +468,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
 
   const handleAddHabit = (name: string) => {
     const newHabit: Habit = {
-      id: `h_${Date.now()}`,
+      id: `h_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name,
       completed: false,
       date: new Date().toISOString().split("T")[0],
@@ -481,7 +552,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
     } else {
       // Start a fast
       const newSession: FastingSession = {
-        id: `fast_${Date.now()}`,
+        id: `fast_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
         type,
         durationHours: duration,
         startTime: new Date().toISOString(),
@@ -538,26 +609,31 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
   }
 
   return (
-    <div className={`min-h-screen font-sans flex transition-all overflow-x-hidden ${darkMode ? "bg-gray-950 text-gray-100 dark" : "bg-gray-50 text-gray-800"}`}>
+    <div className={`min-h-screen font-sans flex transition-all relative overflow-x-hidden ${darkMode ? "bg-gray-950 text-gray-100 dark" : "bg-gray-50 text-gray-800"}`}>
       
+      {/* Decorative ambient glowing blobs for frosted glass look */}
+      <div className="fixed -top-40 -left-40 w-96 h-96 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-3xl pointer-events-none z-0" />
+      <div className="fixed -bottom-40 -right-40 w-96 h-96 rounded-full bg-teal-500/10 dark:bg-teal-500/5 blur-3xl pointer-events-none z-0" />
+      <div className="fixed top-1/2 left-1/3 w-80 h-80 rounded-full bg-amber-500/5 dark:bg-amber-500/3 blur-3xl pointer-events-none z-0" />
+
       {/* FLOATING PUSH NOTIFICATION SIMULATOR TOAST */}
       {notificationToast && (
-        <div className="fixed top-5 right-5 z-50 max-w-sm w-full bg-white dark:bg-gray-900 border-l-4 border-emerald-500 shadow-2xl rounded-2xl p-4 flex gap-3 animate-slide-in items-start pointer-events-auto transition-all text-left">
-          <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center shrink-0">
+        <div className="fixed top-5 right-5 z-50 max-w-sm w-full bg-white/80 dark:bg-gray-900/80 border-l-4 border-emerald-500 shadow-2xl backdrop-blur-xl rounded-2xl p-4 flex gap-3 animate-slide-in items-start pointer-events-auto transition-all text-left">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
             <span className="text-sm">🔔</span>
           </div>
           <div className="flex-1 space-y-1">
             <h4 className="font-extrabold text-gray-900 dark:text-white text-xs">{notificationToast.title}</h4>
             <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-normal">{notificationToast.body}</p>
           </div>
-          <button onClick={() => setNotificationToast(null)} className="text-gray-400 hover:text-gray-600 text-xs font-bold font-mono">×</button>
+          <button onClick={() => setNotificationToast(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-xs font-bold font-mono">×</button>
         </div>
       )}
       
       {/* SIDEBAR: Desktop Layout */}
-      <aside className={`hidden lg:flex flex-col w-64 shrink-0 border-r border-gray-100 dark:border-gray-900 sticky top-0 h-screen ${darkMode ? "bg-gray-900" : "bg-white"}`}>
-        <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-extrabold shadow-sm">
+      <aside className={`hidden lg:flex flex-col w-64 shrink-0 border-r border-gray-100/60 dark:border-gray-900/60 fixed top-0 bottom-0 left-0 h-screen z-30 backdrop-blur-xl ${darkMode ? "bg-slate-900/50" : "bg-white/50"}`}>
+        <div className="p-6 border-b border-gray-100/60 dark:border-gray-800/60 flex items-center gap-2">
+          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-black shadow-lg shadow-emerald-500/20">
             D
           </div>
           <span className="font-black text-lg text-emerald-600 dark:text-emerald-400">DietaryHQ</span>
@@ -600,7 +676,7 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
       </aside>
 
       {/* MAIN CONTAINER CONTENT SECTION */}
-      <div className={`flex-1 flex flex-col min-w-0 ${activeTab === "chats" ? "lg:h-screen lg:overflow-hidden" : ""}`}>
+      <div className={`flex-1 flex flex-col min-w-0 lg:pl-64 ${activeTab === "chats" ? "lg:h-screen lg:overflow-hidden" : ""}`}>
         
         {/* TOP COMPACT BAR: Mobile Logo & Quick Theme selection */}
         <header className={`lg:hidden flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-900 ${darkMode ? "bg-gray-900" : "bg-white"}`}>
@@ -633,6 +709,8 @@ How can I help you optimize your eating habits, plan meals, or calculate macros 
               onAddWeight={handleAddWeight}
               onToggleHabit={handleToggleHabit}
               onTriggerNotification={triggerNotificationToast}
+              aiNutritionTip={aiNutritionTip}
+              loadingAiTip={loadingAiTip}
             />
           )}
 

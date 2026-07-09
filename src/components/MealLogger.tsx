@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FoodItem, MealType, MealLog, UserProfile, LoggedFood } from "../types";
-import { Search, Plus, Sparkles, Image, Check, AlertCircle, Bookmark, Trash2, Heart, PlusCircle } from "lucide-react";
+import { Search, Plus, Sparkles, Image, Check, AlertCircle, Bookmark, Trash2, Heart, PlusCircle, Camera, QrCode } from "lucide-react";
 
 interface MealLoggerProps {
   profile: UserProfile;
@@ -35,6 +35,46 @@ export default function MealLogger({ profile, mealLogs, onAddMealLog, onRemoveMe
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<Partial<FoodItem> & { ingredients?: string } | null>(null);
   const [scanError, setScanError] = useState("");
+
+  // Barcode Scanner Simulation state
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
+  const [showBarcodeDialog, setShowBarcodeDialog] = useState(false);
+  const [scannedBarcode, setScannedBarcode] = useState("");
+  const [barcodeResult, setBarcodeResult] = useState<FoodItem | null>(null);
+
+  const BARCODE_ITEMS = [
+    { name: "Organic Peanut Butter Bar", brand: "Clif Bar", servingSize: "1 bar (68g)", calories: 250, protein: 9, carbs: 44, fat: 7 },
+    { name: "Premium Greek Yogurt - Strawberries", brand: "Chobani Fruit On Bottom", servingSize: "1 cup (150g)", calories: 120, protein: 12, carbs: 15, fat: 0 },
+    { name: "Whole Grain Rolled Oats Cup", brand: "Bob's Red Mill", servingSize: "1 cup (51g)", calories: 190, protein: 7, carbs: 32, fat: 3 },
+    { name: "Salted Almond Butter Blend", brand: "Justin's Squeeze Pack", servingSize: "1 pack (32g)", calories: 190, protein: 6, carbs: 6, fat: 18 },
+    { name: "Dark Chocolate Mint Protein Crisp", brand: "Think! Keto Bar", servingSize: "1 bar (40g)", calories: 150, protein: 10, carbs: 13, fat: 8 }
+  ];
+
+  const handleStartBarcodeScan = () => {
+    setShowBarcodeDialog(true);
+    setBarcodeScanning(true);
+    setScannedBarcode("");
+    setBarcodeResult(null);
+
+    setTimeout(() => {
+      // Simulate successful scan after 2 seconds
+      setBarcodeScanning(false);
+      const barcodeNum = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+      setScannedBarcode(barcodeNum);
+      
+      const randomItem = BARCODE_ITEMS[Math.floor(Math.random() * BARCODE_ITEMS.length)];
+      setBarcodeResult({
+        id: `barcode_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
+        name: randomItem.name,
+        brand: randomItem.brand,
+        servingSize: randomItem.servingSize,
+        calories: randomItem.calories,
+        protein: randomItem.protein,
+        carbs: randomItem.carbs,
+        fat: randomItem.fat,
+      });
+    }, 2000);
+  };
 
   // Search foods on mount and query updates
   useEffect(() => {
@@ -177,7 +217,7 @@ export default function MealLogger({ profile, mealLogs, onAddMealLog, onRemoveMe
   const logScannedFood = () => {
     if (!scanResult) return;
     const foodItem: FoodItem = {
-      id: `ai_${Date.now()}`,
+      id: `ai_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: scanResult.name || "AI Analyzed Dish",
       brand: "AI Estimator",
       servingSize: scanResult.servingSize || "1 portion",
@@ -382,8 +422,28 @@ export default function MealLogger({ profile, mealLogs, onAddMealLog, onRemoveMe
           </div>
         </div>
 
+        {/* Smart Barcode Scanner Simulation Block */}
+        <div className="bg-gradient-to-r from-emerald-600/90 via-teal-600/95 to-emerald-700/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-[0_12px_40px_rgba(16,185,129,0.15)]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-white/20 rounded-2xl">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-left">
+              <h4 className="text-sm font-extrabold text-white">Smart Barcode Scanner</h4>
+              <p className="text-[11px] text-emerald-100">Simulate opening your device's camera to 'scan' product barcodes instantly</p>
+            </div>
+          </div>
+          <button
+            onClick={handleStartBarcodeScan}
+            className="bg-white hover:bg-emerald-50 text-emerald-700 font-black text-xs px-4 py-2.5 rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
+          >
+            <QrCode className="w-4 h-4 text-emerald-600 animate-pulse" />
+            Scan Barcode
+          </button>
+        </div>
+
         {/* Vision AI Section */}
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/10 dark:to-teal-950/10 border border-emerald-100 dark:border-emerald-900/30 p-6 rounded-3xl space-y-4 text-left">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-gray-100/70 dark:border-slate-800/60 p-6 rounded-3xl space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)]">
           <div className="flex justify-between items-start">
             <div>
               <span className="bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 text-[10px] uppercase font-black px-2.5 py-1 rounded-full">
@@ -583,6 +643,121 @@ export default function MealLogger({ profile, mealLogs, onAddMealLog, onRemoveMe
           </div>
         </div>
       </div>
+
+      {/* 📸 BARCODE SCANNER MODAL VIEW */}
+      {showBarcodeDialog && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl text-center relative p-6 space-y-6">
+            
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Camera className="w-5 h-5 text-emerald-400 animate-pulse" />
+                <h3 className="text-sm font-extrabold text-white">Device Camera Viewfinder</h3>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowBarcodeDialog(false);
+                  setBarcodeScanning(false);
+                }}
+                className="text-gray-400 hover:text-white text-lg font-black"
+              >
+                &times;
+              </button>
+            </div>
+
+            {barcodeScanning ? (
+              <div className="relative w-full h-56 bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-slate-800">
+                {/* Simulated live camera blur */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-950/20 via-black to-black opacity-80"></div>
+                
+                {/* Retro scanning line */}
+                <div className="absolute left-0 right-0 h-0.5 bg-red-500 shadow-[0_0_8px_#ef4444] top-1/2 animate-bounce"></div>
+                
+                {/* Scanner Target Box Corners */}
+                <div className="absolute w-44 h-24 border-2 border-emerald-500/40 rounded-xl flex items-center justify-center">
+                  {/* barcode graphic lines */}
+                  <div className="flex gap-1 items-center opacity-60">
+                    <span className="w-1.5 h-12 bg-white rounded-sm"></span>
+                    <span className="w-0.5 h-12 bg-white rounded-sm"></span>
+                    <span className="w-2.5 h-12 bg-white rounded-sm"></span>
+                    <span className="w-1 h-12 bg-white rounded-sm"></span>
+                    <span className="w-0.5 h-12 bg-white rounded-sm"></span>
+                    <span className="w-1.5 h-12 bg-white rounded-sm"></span>
+                    <span className="w-2 h-12 bg-white rounded-sm"></span>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 right-4 text-center">
+                  <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-extrabold animate-pulse">Align barcode with scanner laser</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Result Block */}
+                <div className="bg-emerald-950/30 border border-emerald-500/20 p-5 rounded-2xl text-left space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">
+                        Simulated UPC: {scannedBarcode}
+                      </span>
+                      <h4 className="text-base font-extrabold text-white mt-1.5">{barcodeResult?.name}</h4>
+                      <p className="text-xs text-gray-400">{barcodeResult?.brand} • {barcodeResult?.servingSize}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-black text-emerald-400">{barcodeResult?.calories}</p>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wider">Calories</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs border-t border-slate-800 pt-3">
+                    <div className="bg-slate-850 p-2 rounded-xl">
+                      <p className="font-extrabold text-white">{barcodeResult?.protein}g</p>
+                      <p className="text-[9px] text-gray-500 uppercase font-black">Protein</p>
+                    </div>
+                    <div className="bg-slate-850 p-2 rounded-xl">
+                      <p className="font-extrabold text-white">{barcodeResult?.carbs}g</p>
+                      <p className="text-[9px] text-gray-500 uppercase font-black">Carbs</p>
+                    </div>
+                    <div className="bg-slate-850 p-2 rounded-xl">
+                      <p className="font-extrabold text-white">{barcodeResult?.fat}g</p>
+                      <p className="text-[9px] text-gray-500 uppercase font-black">Fat</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleStartBarcodeScan}
+                    className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition-all cursor-pointer"
+                  >
+                    Scan Another
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (barcodeResult) {
+                        handleLogFood(barcodeResult);
+                        setShowBarcodeDialog(false);
+                        const t = document.createElement("div");
+                        t.className = "fixed bottom-5 right-5 bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl z-50 shadow-lg border border-emerald-500 font-bold flex items-center gap-1 animate-bounce";
+                        t.innerHTML = `🛒 Logged ${barcodeResult.name}!`;
+                        document.body.appendChild(t);
+                        setTimeout(() => t.remove(), 2500);
+                      }
+                    }}
+                    className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer"
+                  >
+                    Log Scanned Food
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-[10px] text-gray-500 italic">
+              AI camera simulation replicates standard optical hardware inputs using dynamic mock state.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

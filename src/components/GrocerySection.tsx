@@ -23,7 +23,7 @@ export default function GrocerySection({ groceryList, setGroceryList }: GroceryS
     if (!newItemName.trim()) return;
 
     const newItem: GroceryItem = {
-      id: `g_item_${Date.now()}`,
+      id: `g_item_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: newItemName.trim(),
       category: newItemCategory,
       checked: false,

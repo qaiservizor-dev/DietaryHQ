@@ -316,7 +316,7 @@ export default function WeeklyMealPlanner({ profile, onAddMealLog, onGenerateGro
   const handleQuickLog = (meal: GridMeal, mealType: "breakfast" | "lunch" | "dinner") => {
     if (!onAddMealLog) return;
     const foodItem: FoodItem = {
-      id: `grid_${mealType}_${Date.now()}`,
+      id: `grid_${mealType}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: meal.name,
       servingSize: meal.servingSize,
       calories: meal.calories,

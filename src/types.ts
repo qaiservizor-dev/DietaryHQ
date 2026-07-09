@@ -119,6 +119,7 @@ export interface UserProfile {
   proteinGoal: number; // grams
   carbsGoal: number; // grams
   fatGoal: number; // grams
+  manualMacros?: boolean;
 }
 
 export interface Message {

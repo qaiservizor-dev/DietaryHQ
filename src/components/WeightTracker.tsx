@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { WeightLog, UserProfile } from "../types";
-import { TrendingDown, Plus, Trash2, Calendar, Scale, Sparkles, Trophy, Check } from "lucide-react";
+import { TrendingDown, TrendingUp, Plus, Trash2, Calendar, Scale, Sparkles, Trophy, Check } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
 
 interface WeightTrackerProps {
@@ -32,6 +32,53 @@ export default function WeightTracker({ profile, weightLogs, onAddWeight, onRemo
   };
 
   const bmiCat = getBmiCategory(roundedBmi);
+
+  // Calculate Weekly Weight Loss/Gain Velocity
+  const getVelocityData = () => {
+    if (weightLogs.length < 2) {
+      return { velocity: 0, text: "Requires multiple entries over time", hasData: false, isLoss: false };
+    }
+    const sorted = [...weightLogs].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+    const earliest = sorted[0];
+    const latest = sorted[sorted.length - 1];
+    
+    const tEarliest = new Date(earliest.timestamp).getTime();
+    const tLatest = new Date(latest.timestamp).getTime();
+    const timeDiffInWeeks = (tLatest - tEarliest) / (1000 * 60 * 60 * 24 * 7);
+    
+    if (timeDiffInWeeks <= 0.05) { // Needs to span at least half a day
+      return { velocity: 0, text: "Logs must span multiple days", hasData: false, isLoss: false };
+    }
+    
+    const weightDiff = latest.weight - earliest.weight;
+    const velocity = weightDiff / timeDiffInWeeks;
+    
+    const isLoss = velocity < 0;
+    const absVelocity = Math.abs(velocity).toFixed(2);
+    
+    const targetDiff = profile.targetWeight - latest.weight;
+    let weeksToGoalText = "";
+    if (targetDiff !== 0 && velocity !== 0) {
+      const weeksNeeded = targetDiff / velocity;
+      if (weeksNeeded > 0) {
+        weeksToGoalText = `At this rate, you'll reach your target weight in ~${Math.ceil(weeksNeeded)} weeks!`;
+      } else {
+        weeksToGoalText = "Your current trajectory is moving away from your target weight.";
+      }
+    }
+    
+    return {
+      velocity: Number(velocity.toFixed(2)),
+      text: isLoss 
+        ? `Losing ${absVelocity} ${weightUnit}/week on average.` 
+        : `Gaining ${absVelocity} ${weightUnit}/week on average.`,
+      hasData: true,
+      isLoss,
+      weeksToGoalText,
+    };
+  };
+
+  const velocityInfo = getVelocityData();
 
   const handleSubmitWeight = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,6 +205,38 @@ export default function WeightTracker({ profile, weightLogs, onAddWeight, onRemo
               <span className="text-3xl font-black">{roundedBmi}</span>
               <span className="text-xs font-bold px-2.5 py-0.5 rounded-full mt-1.5 uppercase tracking-wide border border-current">{bmiCat.label}</span>
             </div>
+          </div>
+
+          {/* Weight Velocity card */}
+          <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 rounded-3xl shadow-sm space-y-3.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white border-b border-gray-50 dark:border-gray-800 pb-2.5 flex items-center gap-1.5">
+              {velocityInfo.isLoss ? <TrendingDown className="w-5 h-5 text-emerald-500" /> : <TrendingUp className="w-5 h-5 text-amber-500" />}
+              Weight Velocity
+            </h3>
+            {velocityInfo.hasData ? (
+              <div className="space-y-2 text-left">
+                <div className={`p-3.5 border rounded-2xl flex flex-col gap-0.5 ${
+                  velocityInfo.isLoss 
+                    ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-150 text-emerald-800 dark:text-emerald-400" 
+                    : "bg-amber-50/50 dark:bg-amber-950/20 border-amber-150 text-amber-800 dark:text-amber-400"
+                }`}>
+                  <span className="text-[10px] uppercase font-black opacity-80 tracking-wider">Weekly Velocity</span>
+                  <span className="text-2xl font-black">{velocityInfo.velocity > 0 ? "+" : ""}{velocityInfo.velocity} {weightUnit}/wk</span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-semibold mt-1">
+                  {velocityInfo.text}
+                </p>
+                {velocityInfo.weeksToGoalText && (
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5 italic">
+                    {velocityInfo.weeksToGoalText}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 dark:bg-gray-850 rounded-2xl text-center">
+                <span className="text-xs text-gray-400 dark:text-gray-500 italic block">Add multiple weight logs with distinct dates to compute your weekly pacing velocity.</span>
+              </div>
+            )}
           </div>
         </div>
 

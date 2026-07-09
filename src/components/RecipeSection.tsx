@@ -174,7 +174,7 @@ export default function RecipeSection({ profile, onAddCustomRecipe, onAddMealLog
       : ["Mix all ingredients together.", "Heat in a pan or serve chilled.", "Enjoy!"];
 
     const newRecipe: Recipe = {
-      id: `recipe_${Date.now()}`,
+      id: `recipe_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: recipeName,
       calories: calculatedPerServing.calories,
       protein: calculatedPerServing.protein,
@@ -223,7 +223,7 @@ export default function RecipeSection({ profile, onAddCustomRecipe, onAddMealLog
 
     // Convert Recipe to logged food item representation
     const foodItemRepresentation: FoodItem = {
-      id: `recipe_food_${selectedRecipe.id}_${Date.now()}`,
+      id: `recipe_food_${selectedRecipe.id}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: `[Recipe] ${selectedRecipe.name}`,
       servingSize: "1 serving",
       calories: selectedRecipe.calories,
@@ -258,7 +258,7 @@ export default function RecipeSection({ profile, onAddCustomRecipe, onAddMealLog
       const recipe = await res.json();
 
       recipe.image = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80";
-      recipe.id = `recipe_ai_${Date.now()}`;
+      recipe.id = `recipe_ai_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 
       onAddCustomRecipe(recipe);
       setRecipes(prev => [recipe, ...prev]);

@@ -86,7 +86,7 @@ export default function UserProfileComponent({
     if (!w || !c || !h) return;
 
     const newLog: MeasurementLog = {
-      id: `meas_${Date.now()}`,
+      id: `meas_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       timestamp: measDate,
       waist: w,
       chest: c,
@@ -261,7 +261,12 @@ export default function UserProfileComponent({
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    calculateTargets();
+    if (formData.manualMacros) {
+      onUpdate(formData);
+      triggerSuccessMessage();
+    } else {
+      calculateTargets();
+    }
   };
 
   const triggerSuccessMessage = () => {
@@ -352,20 +357,20 @@ export default function UserProfileComponent({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Form Column */}
-        <form onSubmit={handleSave} className="lg:col-span-2 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-3">
+        <form onSubmit={handleSave} className="lg:col-span-2 space-y-6 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)]">
+          <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100/60 dark:border-gray-800/60 pb-3">
             <Activity className="w-5 h-5 text-emerald-500" />
             Biometric Profile
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Preferred Units</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Preferred Units</label>
               <select
                 name="units"
                 value={formData.units}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all cursor-pointer"
               >
                 <option value="metric">Metric (kg/cm)</option>
                 <option value="imperial">Imperial (lbs/inches)</option>
@@ -373,14 +378,14 @@ export default function UserProfileComponent({
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Full Name</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
                 placeholder="E.g., Alex Johnson"
               />
             </div>
@@ -388,7 +393,7 @@ export default function UserProfileComponent({
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Age (years)</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Age (years)</label>
               <input
                 type="number"
                 name="age"
@@ -397,17 +402,17 @@ export default function UserProfileComponent({
                 min="10"
                 max="100"
                 required
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Gender</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Gender</label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all cursor-pointer"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -416,7 +421,7 @@ export default function UserProfileComponent({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Height ({heightLabel})</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Height ({heightLabel})</label>
               <input
                 type="number"
                 name="height"
@@ -425,12 +430,12 @@ export default function UserProfileComponent({
                 min="50"
                 max="250"
                 required
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Weight ({weightLabel})</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Weight ({weightLabel})</label>
               <input
                 type="number"
                 name="weight"
@@ -440,14 +445,14 @@ export default function UserProfileComponent({
                 max="300"
                 step="0.1"
                 required
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Target Weight ({weightLabel})</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Target Weight ({weightLabel})</label>
               <input
                 type="number"
                 name="targetWeight"
@@ -457,12 +462,12 @@ export default function UserProfileComponent({
                 max="300"
                 step="0.1"
                 required
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Body Fat (%)</label>
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Body Fat (%)</label>
               <input
                 type="number"
                 name="bodyFat"
@@ -471,17 +476,17 @@ export default function UserProfileComponent({
                 min="3"
                 max="60"
                 placeholder="Optional"
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Activity Level</label>
+            <div className="col-span-2">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Activity Level</label>
               <select
                 name="activityLevel"
                 value={formData.activityLevel}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all cursor-pointer"
               >
                 <option value="sedentary">Sedentary (Office job)</option>
                 <option value="lightly_active">Lightly Active (1-3 days/wk)</option>
@@ -490,13 +495,13 @@ export default function UserProfileComponent({
               </select>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fitness Goal</label>
+            <div className="col-span-2">
+              <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Fitness Goal</label>
               <select
                 name="fitnessGoal"
                 value={formData.fitnessGoal}
                 onChange={handleChange}
-                className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all cursor-pointer"
               >
                 <option value="lose_weight">Lose Weight (Caloric Deficit)</option>
                 <option value="gain_weight">Gain Weight (Caloric Surplus)</option>
@@ -507,20 +512,100 @@ export default function UserProfileComponent({
             </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-6">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-3 mb-4">
+          <div className="border-t border-gray-100/60 dark:border-gray-800/60 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-500" />
+                Custom Calorie & Macro Goals
+              </h3>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.manualMacros || false}
+                  onChange={(e) => setFormData({ ...formData, manualMacros: e.target.checked })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-250 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                <span className="ml-2 text-xs font-semibold text-gray-600">Manual Override</span>
+              </label>
+            </div>
+
+            {formData.manualMacros ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-amber-500/5 dark:bg-amber-500/5 border border-amber-500/20 rounded-2xl animate-fade-in">
+                <div>
+                  <label className="block text-[9px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">Calories (kcal)</label>
+                  <input
+                    type="number"
+                    name="dailyCalorieGoal"
+                    value={formData.dailyCalorieGoal}
+                    onChange={(e) => setFormData({ ...formData, dailyCalorieGoal: parseInt(e.target.value) || 0 })}
+                    min="500"
+                    max="10000"
+                    required
+                    className="w-full bg-white/50 dark:bg-slate-950/50 border border-amber-500/30 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">Protein (g)</label>
+                  <input
+                    type="number"
+                    name="proteinGoal"
+                    value={formData.proteinGoal}
+                    onChange={(e) => setFormData({ ...formData, proteinGoal: parseInt(e.target.value) || 0 })}
+                    min="10"
+                    max="500"
+                    required
+                    className="w-full bg-white/50 dark:bg-slate-950/50 border border-amber-500/30 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">Carbs (g)</label>
+                  <input
+                    type="number"
+                    name="carbsGoal"
+                    value={formData.carbsGoal}
+                    onChange={(e) => setFormData({ ...formData, carbsGoal: parseInt(e.target.value) || 0 })}
+                    min="10"
+                    max="1000"
+                    required
+                    className="w-full bg-white/50 dark:bg-slate-950/50 border border-amber-500/30 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">Fat (g)</label>
+                  <input
+                    type="number"
+                    name="fatGoal"
+                    value={formData.fatGoal}
+                    onChange={(e) => setFormData({ ...formData, fatGoal: parseInt(e.target.value) || 0 })}
+                    min="5"
+                    max="300"
+                    required
+                    className="w-full bg-white/50 dark:bg-slate-950/50 border border-amber-500/30 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed italic">
+                Calorie and macronutrient allocations are automatically computed for you. Enable "Manual Override" to configure customized target budgets.
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-gray-100/60 dark:border-gray-800/60 pt-6">
+            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-100/60 dark:border-gray-800/60 pb-3 mb-4">
               <ShieldAlert className="w-5 h-5 text-emerald-500" />
               Dietary Preferences & Allergies
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Dietary Style</label>
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Dietary Style</label>
                 <select
                   name="dietPreference"
                   value={formData.dietPreference}
                   onChange={handleChange}
-                  className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                  className="w-full bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all cursor-pointer"
                 >
                   <option value="none">Balanced / No Restriction</option>
                   <option value="keto">Ketogenic (Very Low Carb)</option>
@@ -534,32 +619,32 @@ export default function UserProfileComponent({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Food Allergies</label>
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Food Allergies</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newAllergy}
                     onChange={(e) => setNewAllergy(e.target.value)}
                     placeholder="E.g., Peanuts, Dairy, Gluten"
-                    className="flex-1 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                    className="flex-1 bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addAllergy())}
                   />
                   <button
                     type="button"
                     onClick={addAllergy}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl px-4 py-2 text-sm transition-all"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl px-4 py-2 text-xs md:text-sm transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     Add
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {formData.allergies.length === 0 ? (
-                    <span className="text-gray-400 text-xs italic">No allergies listed</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs italic">No allergies listed</span>
                   ) : (
                     formData.allergies.map((allergy, i) => (
                       <span
                         key={i}
-                        className="bg-red-50 text-red-700 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:bg-red-100"
+                        className="bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:bg-red-500/20 transition-all"
                         onClick={() => removeAllergy(i)}
                       >
                         {allergy} &times;
@@ -570,32 +655,32 @@ export default function UserProfileComponent({
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Other Food Restrictions (Religious/Ethical)</label>
+                <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Other Food Restrictions (Religious/Ethical)</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newRestriction}
                     onChange={(e) => setNewRestriction(e.target.value)}
                     placeholder="E.g., Halal, Kosher, Pork-free"
-                    className="flex-1 bg-gray-50 border border-gray-200 text-gray-800 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none"
+                    className="flex-1 bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none backdrop-blur-md transition-all"
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRestriction())}
                   />
                   <button
                     type="button"
                     onClick={addRestriction}
-                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl px-4 py-2 text-sm transition-all"
+                    className="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-xl px-4 py-2 text-xs md:text-sm transition-all cursor-pointer shrink-0 shadow-sm"
                   >
                     Add
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {formData.restrictions.length === 0 ? (
-                    <span className="text-gray-400 text-xs italic">No specific restrictions</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs italic">No specific restrictions</span>
                   ) : (
                     formData.restrictions.map((restriction, i) => (
                       <span
                         key={i}
-                        className="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:bg-blue-100"
+                        className="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 cursor-pointer hover:bg-blue-500/20 transition-all"
                         onClick={() => removeRestriction(i)}
                       >
                         {restriction} &times;
@@ -607,9 +692,9 @@ export default function UserProfileComponent({
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100/60 dark:border-gray-800/60">
             {saveSuccess && (
-              <span className="text-emerald-600 text-sm font-semibold flex items-center gap-1 mr-auto self-center animate-fade-in">
+              <span className="text-emerald-600 dark:text-emerald-400 text-xs md:text-sm font-bold flex items-center gap-1 mr-auto self-center animate-fade-in">
                 <Check className="w-4 h-4" /> Profile & targets successfully computed!
               </span>
             )}
@@ -679,20 +764,20 @@ export default function UserProfileComponent({
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide border-b border-gray-50 pb-2">
+          <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] space-y-4">
+            <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest border-b border-gray-150/60 dark:border-gray-800/60 pb-2">
               Diet Breakdown (TDEE Projections)
             </h4>
             <div className="space-y-3">
               <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Basal Metabolic Rate (BMR):</span>
-                <span className="font-bold text-gray-900">
+                <span className="text-gray-500 dark:text-gray-400 font-medium">Basal Metabolic Rate (BMR):</span>
+                <span className="font-bold text-gray-900 dark:text-white">
                   {Math.round(10 * profile.weight + 6.25 * profile.height - 5 * profile.age + (profile.gender === "male" ? 5 : -161))} kcal
                 </span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Total Daily Energy Expenditure (TDEE):</span>
-                <span className="font-bold text-gray-900">
+                <span className="text-gray-500 dark:text-gray-400 font-medium">Total Daily Energy Expenditure (TDEE):</span>
+                <span className="font-bold text-gray-900 dark:text-white">
                   {Math.round(
                     (10 * profile.weight + 6.25 * profile.height - 5 * profile.age + (profile.gender === "male" ? 5 : -161)) *
                     (profile.activityLevel === "sedentary" ? 1.2 : profile.activityLevel === "lightly_active" ? 1.375 : profile.activityLevel === "moderately_active" ? 1.55 : 1.725)
@@ -700,8 +785,8 @@ export default function UserProfileComponent({
                 </span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-medium">Daily Caloric Deficit/Surplus:</span>
-                <span className={`font-bold ${profile.fitnessGoal === "lose_weight" ? "text-red-600" : profile.fitnessGoal === "maintain" ? "text-gray-600" : "text-emerald-600"}`}>
+                <span className="text-gray-500 dark:text-gray-400 font-medium">Daily Caloric Deficit/Surplus:</span>
+                <span className={`font-black ${profile.fitnessGoal === "lose_weight" ? "text-red-500" : profile.fitnessGoal === "maintain" ? "text-gray-500 dark:text-gray-400" : "text-emerald-500"}`}>
                   {profile.fitnessGoal === "lose_weight" ? "-500 kcal" : profile.fitnessGoal === "maintain" ? "0 kcal" : "+350 kcal"}
                 </span>
               </div>
@@ -711,10 +796,10 @@ export default function UserProfileComponent({
       </div>
 
       {/* 📐 BODY MEASUREMENTS TRACKING SECTION */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-6 text-left mt-8">
-        <div className="border-b border-gray-50 dark:border-gray-800 pb-3 flex justify-between items-center">
+      <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] space-y-6 text-left mt-8">
+        <div className="border-b border-gray-100/60 dark:border-gray-800/60 pb-3 flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
+            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-1.5">
               <Ruler className="w-5 h-5 text-emerald-500" />
               Body Circumference Tracker
             </h3>
@@ -722,32 +807,32 @@ export default function UserProfileComponent({
               Track waist, chest, and hip dimensions over time to assess body composition changes beyond scale weight.
             </p>
           </div>
-          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40 px-2.5 py-1 rounded-xl">
+          <span className="text-xs font-bold text-emerald-700 bg-emerald-500/10 dark:text-emerald-400 px-2.5 py-1 rounded-xl">
             Active Metric: {formData.units === "metric" ? "cm" : "inches"}
           </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Add Entry Form */}
-          <form onSubmit={handleAddMeasurement} className="lg:col-span-4 bg-gray-50/50 dark:bg-gray-800/10 border border-gray-100 dark:border-gray-800 p-5 rounded-2xl space-y-4">
-            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-1">
+          <form onSubmit={handleAddMeasurement} className="lg:col-span-4 bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 p-5 rounded-2xl space-y-4">
+            <h4 className="font-extrabold text-xs text-gray-900 dark:text-white flex items-center gap-1 uppercase tracking-wider">
               <Plus className="w-4 h-4 text-emerald-500" /> Add New Log
             </h4>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1">Log Date</label>
+                <label className="block text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider mb-1">Log Date</label>
                 <input 
                   type="date"
                   value={measDate}
                   onChange={(e) => setMeasDate(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white/50 dark:bg-slate-950/50 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-emerald-500/50"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1">
+                <label className="block text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider mb-1">
                   Waist Circumference ({formData.units === "metric" ? "cm" : "inches"})
                 </label>
                 <input 
@@ -758,13 +843,13 @@ export default function UserProfileComponent({
                   placeholder="E.g. 84.5"
                   value={measWaist}
                   onChange={(e) => setMeasWaist(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white/50 dark:bg-slate-950/50 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-emerald-500/50"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1">
+                <label className="block text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider mb-1">
                   Chest Circumference ({formData.units === "metric" ? "cm" : "inches"})
                 </label>
                 <input 
@@ -775,13 +860,13 @@ export default function UserProfileComponent({
                   placeholder="E.g. 101.2"
                   value={measChest}
                   onChange={(e) => setMeasChest(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white/50 dark:bg-slate-950/50 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-emerald-500/50"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1">
+                <label className="block text-[10px] uppercase font-black text-gray-400 dark:text-gray-500 tracking-wider mb-1">
                   Hip Circumference ({formData.units === "metric" ? "cm" : "inches"})
                 </label>
                 <input 
@@ -792,7 +877,7 @@ export default function UserProfileComponent({
                   placeholder="E.g. 96.0"
                   value={measHips}
                   onChange={(e) => setMeasHips(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-850 rounded-xl px-3 py-2 text-xs text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white/50 dark:bg-slate-950/50 border border-gray-200/60 dark:border-slate-800/60 text-gray-800 dark:text-white rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-emerald-500/50"
                   required
                 />
               </div>
@@ -800,7 +885,7 @@ export default function UserProfileComponent({
 
             <button
               type="submit"
-              className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
+              className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer uppercase tracking-wider"
             >
               Log Measurements
             </button>
@@ -809,7 +894,7 @@ export default function UserProfileComponent({
           {/* Chart and History list */}
           <div className="lg:col-span-8 space-y-6 w-full">
             {/* Recharts graph */}
-            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white/45 dark:bg-slate-950/45 border border-gray-200/60 dark:border-slate-800/60 rounded-2xl p-4 shadow-sm">
               <h4 className="font-extrabold text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4 text-emerald-500" /> Circumference History (Trends)
               </h4>
@@ -832,14 +917,14 @@ export default function UserProfileComponent({
 
             {/* List log */}
             <div className="space-y-2">
-              <h4 className="font-bold text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Log Entries</h4>
+              <h4 className="font-extrabold text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider">Log Entries</h4>
               
-              <div className="max-h-[300px] overflow-y-auto space-y-2 border border-gray-100 dark:border-gray-800 rounded-xl p-3 bg-gray-50/20 dark:bg-gray-900/40">
+              <div className="max-h-[300px] overflow-y-auto space-y-2 border border-gray-200/60 dark:border-slate-800/60 rounded-xl p-3 bg-white/30 dark:bg-slate-900/40">
                 {measurementLogs.length === 0 ? (
-                  <p className="text-xs text-gray-400 italic text-center py-4">No logged entries yet</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 italic text-center py-4">No logged entries yet</p>
                 ) : (
                   [...measurementLogs].reverse().map((log) => (
-                    <div key={log.id} className="flex justify-between items-center bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-850 rounded-xl px-4 py-2.5 shadow-sm text-xs">
+                    <div key={log.id} className="flex justify-between items-center bg-white/50 dark:bg-slate-950/50 border border-gray-150/50 dark:border-slate-800/50 rounded-xl px-4 py-2.5 shadow-sm text-xs">
                       <div>
                         <span className="font-black text-gray-800 dark:text-gray-200">{log.timestamp}</span>
                       </div>

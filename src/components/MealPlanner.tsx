@@ -128,7 +128,7 @@ export default function MealPlanner({ profile, onAddMealLog, onAddGroceryItem, o
 
   const handleAddMealToLogs = (type: MealType, meal: PlannedMeal) => {
     const foodItem: FoodItem = {
-      id: `planned_${type}_${Date.now()}`,
+      id: `planned_${type}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       name: meal.name,
       servingSize: "1 custom portion",
       calories: meal.calories,

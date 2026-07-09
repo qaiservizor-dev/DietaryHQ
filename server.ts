@@ -155,7 +155,7 @@ app.post("/api/foods/custom", (req, res) => {
     return res.status(400).json({ error: "Name, serving size, and calories are required." });
   }
   const newFood = {
-    id: `custom_${Date.now()}`,
+    id: `custom_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
     name,
     brand: brand || "My Kitchen",
     servingSize,
@@ -180,7 +180,7 @@ app.get("/api/recipes", (req, res) => {
 
 app.post("/api/recipes", (req, res) => {
   const newRecipe = {
-    id: `recipe_${Date.now()}`,
+    id: `recipe_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
     ...req.body,
     isFavorite: req.body.isFavorite || false,
   };
@@ -277,6 +277,69 @@ Real-Time User Context: ${profileSummary}`;
   } catch (error: any) {
     console.error("Gemini OnSpace AI Coach Error:", error);
     res.status(500).json({ error: "Failed to query OnSpace AI", details: error.message });
+  }
+});
+
+// Endpoint: AI Daily Nutrition Analysis
+app.post("/api/ai/nutrition-analysis", async (req, res) => {
+  const { userProfile, todayMacros } = req.body;
+  if (!userProfile || !todayMacros) {
+    return res.status(400).json({ error: "userProfile and todayMacros are required" });
+  }
+
+  const aiClient = getGeminiClient();
+
+  const eatenCals = todayMacros.calories || 0;
+  const eatenP = todayMacros.protein || 0;
+  const eatenC = todayMacros.carbs || 0;
+  const eatenF = todayMacros.fat || 0;
+
+  const targetCals = userProfile.dailyCalorieGoal;
+  const targetP = userProfile.proteinGoal;
+  const targetC = userProfile.carbsGoal;
+  const targetF = userProfile.fatGoal;
+
+  const goal = userProfile.fitnessGoal;
+
+  if (!aiClient) {
+    // Beautiful rule-based fallback
+    let tip = "";
+    if (eatenCals === 0) {
+      tip = `Log your first meal today so I can analyze your macro distribution towards your ${goal.replace('_', ' ')} goal!`;
+    } else if (eatenP < targetP * 0.4) {
+      tip = `Your protein is low at only ${eatenP}g today; consider adding a high-protein source like Greek yogurt or chicken to preserve muscle mass.`;
+    } else if (eatenC > targetC * 1.15) {
+      tip = `You've exceeded your daily carb goal by ${Math.round(eatenC - targetC)}g; try leaning more on lean proteins and healthy fats for the rest of today.`;
+    } else if (eatenF > targetF * 1.15) {
+      tip = `Your fat intake is slightly elevated; try to prioritize grilled poultry or cruciferous vegetables to stabilize your calorie budget.`;
+    } else if (eatenCals > targetCals * 1.1) {
+      tip = `You are currently in a caloric surplus of ${Math.round(eatenCals - targetCals)} kcal; focus on fiber-rich greens and hydration to maintain satiety.`;
+    } else {
+      tip = `Excellent work! Your macro balance is highly aligned with your ${goal.replace('_', ' ')} strategy today.`;
+    }
+    return res.json({ recommendation: tip });
+  }
+
+  try {
+    const prompt = `Analyze the user's daily macronutrient and calorie intake against their goals and provide a single, highly actionable, concise one-sentence (maximum 20 words) nutritional recommendation or warning regarding their macro balance. 
+Focus strictly on their goal: ${goal.replace('_', ' ')}.
+Daily Targets: Calories: ${targetCals} kcal, Protein: ${targetP}g, Carbs: ${targetC}g, Fat: ${targetF}g.
+Today's Consumed: Calories: ${eatenCals} kcal, Protein: ${eatenP}g, Carbs: ${eatenC}g, Fat: ${eatenF}g.
+The response must be exactly one short sentence. No markdown bold or headers, just plain text.`;
+
+    const response = await aiClient.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        temperature: 0.5,
+      },
+    });
+
+    const tip = response.text ? response.text.trim().replace(/\n/g, "") : "Maintain hydration and keep tracking to stay on target!";
+    res.json({ recommendation: tip });
+  } catch (error: any) {
+    console.error("AI Nutrition Analysis Error:", error);
+    res.status(500).json({ error: "Failed to generate recommendation", details: error.message });
   }
 });
 

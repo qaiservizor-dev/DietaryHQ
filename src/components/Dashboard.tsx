@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { UserProfile, MealLog, WaterLog, ExerciseLog, WeightLog, Habit } from "../types";
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie, Legend, ReferenceLine } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, Cell, PieChart, Pie, Legend, ReferenceLine, RadialBarChart, RadialBar } from "recharts";
 import { Flame, Droplet, Dumbbell, Award, Plus, Sparkles, TrendingDown, ChevronRight, Activity, Calendar, Trophy, Zap, Check } from "lucide-react";
 
 interface DashboardProps {
@@ -20,6 +20,8 @@ interface DashboardProps {
   onAddWeight: (weight: number) => void;
   onToggleHabit: (habitId: string) => void;
   onTriggerNotification?: (title: string, body: string, type: string) => void;
+  aiNutritionTip?: string;
+  loadingAiTip?: boolean;
 }
 
 export default function Dashboard({
@@ -34,6 +36,8 @@ export default function Dashboard({
   onAddWeight,
   onToggleHabit,
   onTriggerNotification,
+  aiNutritionTip,
+  loadingAiTip,
 }: DashboardProps) {
   const [quickWeight, setQuickWeight] = useState("");
   const [quickDuration, setQuickDuration] = useState("");
@@ -146,8 +150,9 @@ export default function Dashboard({
   eatenCarbs = Math.round(eatenCarbs);
   eatenFat = Math.round(eatenFat);
 
-  const remainingCalories = Math.max(0, profile.dailyCalorieGoal - eatenCalories + todayExerciseCalories);
-  const calorieProgress = Math.min(100, (eatenCalories / profile.dailyCalorieGoal) * 100);
+  const remainingCalories = profile.dailyCalorieGoal - eatenCalories + todayExerciseCalories;
+  const actualCalorieProgress = profile.dailyCalorieGoal > 0 ? (eatenCalories / profile.dailyCalorieGoal) * 100 : 0;
+  const calorieProgress = Math.min(100, actualCalorieProgress);
 
   // Habits calculations
   const completedHabits = habits.filter(h => h.completed).length;
@@ -195,6 +200,35 @@ export default function Dashboard({
     { name: "Protein", value: eatenProtein * 4, color: "#10b981" },
     { name: "Carbs", value: eatenCarbs * 4, color: "#f59e0b" },
     { name: "Fat", value: eatenFat * 9, color: "#ef4444" },
+  ];
+
+  // 4. Radial macro data
+  const proteinProgress = profile.proteinGoal > 0 ? (eatenProtein / profile.proteinGoal) * 100 : 0;
+  const carbsProgress = profile.carbsGoal > 0 ? (eatenCarbs / profile.carbsGoal) * 100 : 0;
+  const fatProgress = profile.fatGoal > 0 ? (eatenFat / profile.fatGoal) * 100 : 0;
+
+  const radialMacroData = [
+    {
+      name: "Fat",
+      value: Math.round(Math.min(100, fatProgress)),
+      goal: profile.fatGoal,
+      eaten: eatenFat,
+      fill: "#ef4444", // red
+    },
+    {
+      name: "Carbs",
+      value: Math.round(Math.min(100, carbsProgress)),
+      goal: profile.carbsGoal,
+      eaten: eatenCarbs,
+      fill: "#f59e0b", // amber
+    },
+    {
+      name: "Protein",
+      value: Math.round(Math.min(100, proteinProgress)),
+      goal: profile.proteinGoal,
+      eaten: eatenProtein,
+      fill: "#10b981", // emerald
+    },
   ];
 
   const handleAddExerciseSubmit = (e: React.FormEvent) => {
@@ -277,7 +311,7 @@ export default function Dashboard({
       )}
       
       {/* Title greeting card */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 dark:border-gray-900 pb-5">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100/40 dark:border-gray-900/40 pb-5">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight flex items-center gap-2.5">
             <Activity className="w-8 h-8 text-emerald-500" />
@@ -299,20 +333,50 @@ export default function Dashboard({
             }}
             className={`text-[10px] font-black uppercase tracking-wider px-3.5 py-2.5 rounded-2xl border transition-all cursor-pointer ${
               forceNotificationSim 
-                ? "bg-amber-500 border-amber-400 text-white shadow-sm" 
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-800 text-gray-500 border-gray-200 dark:border-gray-800"
+                ? "bg-amber-500 border-amber-400 text-white shadow-md shadow-amber-500/10" 
+                : "bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-gray-500 border-gray-200/60 dark:border-gray-800/60 hover:bg-white/80 dark:hover:bg-slate-900/80"
             }`}
           >
             ⏰ Simulate {forceNotificationSim ? "8 PM (Active)" : "8 PM Reminder"}
           </button>
 
-          <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-400 px-4 py-2 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 shadow-sm">
+          <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 px-4 py-2 rounded-2xl border border-emerald-500/20 backdrop-blur-md shadow-xs">
             <Zap className="w-5 h-5 text-emerald-500 animate-pulse" />
             <div className="text-left">
-              <p className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 dark:text-emerald-300">Daily Streak</p>
-              <p className="text-xs font-black">5 Days Active 🔥</p>
+              <p className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400">Daily Streak</p>
+              <p className="text-xs font-black text-emerald-800 dark:text-emerald-200">5 Days Active 🔥</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* AI Daily Nutrition Coach Alert Banner */}
+      <div className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-3xl p-5 text-left flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-md shadow-[0_8px_32px_0_rgba(16,185,129,0.02)] relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/5 to-transparent pointer-events-none" />
+        <div className="flex items-start gap-3.5 relative z-10">
+          <div className="p-2.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl shrink-0">
+            <Sparkles className="w-5 h-5 animate-pulse" />
+          </div>
+          <div>
+            <span className="text-[10px] uppercase font-black tracking-wider text-emerald-600 dark:text-emerald-400">
+              AI Coach Today's Macro Advisor
+            </span>
+            {loadingAiTip ? (
+              <div className="flex items-center gap-2 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce delay-150"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-bounce delay-300"></div>
+                <span className="text-xs text-gray-400 italic">Analyzing current meal logs...</span>
+              </div>
+            ) : (
+              <p className="text-gray-800 dark:text-gray-200 text-sm font-medium leading-relaxed mt-0.5">
+                {aiNutritionTip || "Great job logging your meals today. Keep going to trigger real-time AI nutritional advice!"}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0 relative z-10 bg-emerald-500/10 px-2 py-1 rounded-lg">
+          ● Real-time analysis
         </div>
       </div>
 
@@ -320,35 +384,43 @@ export default function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Main Calorie Budget Ring Card */}
-        <div className="lg:col-span-2 bg-gradient-to-br from-emerald-900 to-teal-950 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5">
+        <div className="lg:col-span-2 bg-gradient-to-br from-slate-950 via-slate-900/95 to-emerald-950/90 text-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_30px_rgba(16,185,129,0.06)] border border-emerald-500/20 flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8 relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
             <Flame className="w-48 h-48" />
           </div>
 
           <div className="space-y-6 z-10 w-full md:w-auto text-center md:text-left">
-            <span className="bg-emerald-500/20 text-emerald-300 font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
+            <span className="bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] sm:text-xs px-3 py-1 rounded-full uppercase tracking-widest">
               Calorie Budget Tracker
             </span>
 
-            <div className="grid grid-cols-3 gap-6 text-center md:text-left">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 text-center md:text-left">
               <div>
-                <p className="text-emerald-100/70 text-xs font-semibold">Goal Target</p>
-                <p className="text-2xl font-black mt-1 text-emerald-300">{profile.dailyCalorieGoal}</p>
+                <p className="text-emerald-100/70 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Goal Target</p>
+                <p className="text-lg sm:text-2xl font-black mt-1 text-emerald-300">{profile.dailyCalorieGoal.toLocaleString()}</p>
               </div>
-              <div className="border-l border-white/10 pl-6">
-                <p className="text-emerald-100/70 text-xs font-semibold">Food Eaten</p>
-                <p className="text-2xl font-black mt-1 text-rose-300">-{eatenCalories}</p>
+              <div className="border-l border-white/10 pl-2 sm:pl-6">
+                <p className="text-emerald-100/70 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Food Eaten</p>
+                <p className="text-lg sm:text-2xl font-black mt-1 text-rose-400">-{eatenCalories.toLocaleString()}</p>
               </div>
-              <div className="border-l border-white/10 pl-6">
-                <p className="text-emerald-100/70 text-xs font-semibold">Burned</p>
-                <p className="text-2xl font-black mt-1 text-cyan-300">+{todayExerciseCalories}</p>
+              <div className="border-l border-white/10 pl-2 sm:pl-6">
+                <p className="text-emerald-100/70 text-[10px] sm:text-xs font-semibold uppercase tracking-wider">Burned</p>
+                <p className="text-lg sm:text-2xl font-black mt-1 text-cyan-300">+{todayExerciseCalories.toLocaleString()}</p>
               </div>
             </div>
 
             <div className="pt-2">
-              <p className="text-emerald-200/80 text-sm">Remaining Daily Calories</p>
-              <h2 className="text-4xl font-extrabold text-white mt-1">
-                {remainingCalories.toLocaleString()} <span className="text-lg font-normal text-emerald-300">kcal</span>
+              <p className="text-emerald-200/80 text-xs sm:text-sm font-semibold uppercase tracking-wider">
+                {remainingCalories >= 0 ? "Remaining Daily Calories" : "Daily Budget Overdrawn"}
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black text-white mt-1 flex items-baseline gap-1.5 justify-center md:justify-start">
+                <span className={remainingCalories >= 0 ? "text-white" : "text-rose-400"}>
+                  {remainingCalories >= 0 ? remainingCalories.toLocaleString() : Math.abs(remainingCalories).toLocaleString()}
+                </span>
+                <span className={`text-sm sm:text-lg font-bold uppercase tracking-wider ${remainingCalories >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                  {remainingCalories >= 0 ? "kcal left" : "kcal over"}
+                </span>
               </h2>
             </div>
           </div>
@@ -361,8 +433,8 @@ export default function Dashboard({
                 cx="50"
                 cy="50"
                 r="40"
-                stroke="rgba(255, 255, 255, 0.1)"
-                strokeWidth="8"
+                stroke="rgba(255, 255, 255, 0.08)"
+                strokeWidth="7"
                 fill="transparent"
               />
               {/* Progress Circle */}
@@ -370,8 +442,8 @@ export default function Dashboard({
                 cx="50"
                 cy="50"
                 r="40"
-                stroke="#10b981"
-                strokeWidth="8"
+                stroke={remainingCalories >= 0 ? "#10b981" : "#f43f5e"}
+                strokeWidth="7"
                 fill="transparent"
                 strokeDasharray="251.2"
                 strokeDashoffset={251.2 - (251.2 * calorieProgress) / 100}
@@ -380,87 +452,65 @@ export default function Dashboard({
               />
             </svg>
             <div className="absolute text-center space-y-0.5">
-              <span className="text-3xl font-black tracking-tight">{Math.round(calorieProgress)}%</span>
-              <p className="text-[10px] text-emerald-300 uppercase tracking-wider font-extrabold">Consumed</p>
+              <span className={`text-3xl font-black tracking-tight ${remainingCalories >= 0 ? "text-white" : "text-rose-400"}`}>
+                {Math.round(actualCalorieProgress)}%
+              </span>
+              <p className={`text-[9px] uppercase tracking-widest font-black ${remainingCalories >= 0 ? "text-emerald-300" : "text-rose-400"}`}>
+                {remainingCalories >= 0 ? "Consumed" : "Over Budget"}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Macros Breakdown Side Card */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-5 flex flex-col justify-between">
-          <h3 className="text-base font-bold text-gray-900 dark:text-white border-b border-gray-50 dark:border-gray-800 pb-2">
-            Target Macronutrients
-          </h3>
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4 flex flex-col justify-between">
+          <div className="border-b border-gray-50 dark:border-gray-800 pb-2 flex justify-between items-center">
+            <h3 className="text-base font-black text-gray-900 dark:text-white">
+              Target Macro Rings
+            </h3>
+            <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-500/10 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+              Live Rings
+            </span>
+          </div>
 
-          <div className="grid grid-cols-3 gap-3 text-center">
-            {/* Protein */}
-            <div className="space-y-2">
-              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-gray-100 dark:text-gray-800" strokeWidth="3" fill="transparent" />
-                  <circle
-                    cx="20"
-                    cy="20"
-                    r="16"
-                    stroke="#10b981"
-                    strokeWidth="3"
-                    fill="transparent"
-                    strokeDasharray="100.5"
-                    strokeDashoffset={100.5 - (100.5 * Math.min(100, (eatenProtein / profile.proteinGoal) * 100)) / 100}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute text-xs font-black text-gray-800 dark:text-gray-100">{eatenProtein}g</span>
-              </div>
-              <p className="text-xs font-bold text-gray-800 dark:text-gray-200">Protein</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Target: {profile.proteinGoal}g</p>
+          {/* Recharts RadialBarChart Ring Visualization */}
+          <div className="h-[180px] w-full relative flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart
+                cx="50%"
+                cy="50%"
+                innerRadius="30%"
+                outerRadius="100%"
+                barSize={10}
+                data={radialMacroData}
+              >
+                <RadialBar
+                  background={{ fill: "rgba(0, 0, 0, 0.04)" }}
+                  dataKey="value"
+                  cornerRadius={5}
+                />
+              </RadialBarChart>
+            </ResponsiveContainer>
+            {/* Center Summary */}
+            <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-black text-gray-800 dark:text-gray-100">{Math.round((proteinProgress + carbsProgress + fatProgress) / 3)}%</span>
+              <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold">Avg Macro</span>
             </div>
+          </div>
 
-            {/* Carbs */}
-            <div className="space-y-2">
-              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-gray-100 dark:text-gray-800" strokeWidth="3" fill="transparent" />
-                  <circle
-                    cx="20"
-                    cy="20"
-                    r="16"
-                    stroke="#f59e0b"
-                    strokeWidth="3"
-                    fill="transparent"
-                    strokeDasharray="100.5"
-                    strokeDashoffset={100.5 - (100.5 * Math.min(100, (eatenCarbs / profile.carbsGoal) * 100)) / 100}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute text-xs font-black text-gray-800 dark:text-gray-100">{eatenCarbs}g</span>
+          <div className="space-y-2 text-xs">
+            {radialMacroData.map((macro) => (
+              <div key={macro.name} className="flex justify-between items-center p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: macro.fill }}></span>
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{macro.name}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400 dark:text-gray-500 text-[10px] font-semibold">{macro.eaten}g / {macro.goal}g</span>
+                  <span className="font-black text-gray-950 dark:text-white w-8 text-right">{macro.value}%</span>
+                </div>
               </div>
-              <p className="text-xs font-bold text-gray-800 dark:text-gray-200">Carbs</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Target: {profile.carbsGoal}g</p>
-            </div>
-
-            {/* Fat */}
-            <div className="space-y-2">
-              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 40 40">
-                  <circle cx="20" cy="20" r="16" stroke="currentColor" className="text-gray-100 dark:text-gray-800" strokeWidth="3" fill="transparent" />
-                  <circle
-                    cx="20"
-                    cy="20"
-                    r="16"
-                    stroke="#ef4444"
-                    strokeWidth="3"
-                    fill="transparent"
-                    strokeDasharray="100.5"
-                    strokeDashoffset={100.5 - (100.5 * Math.min(100, (eatenFat / profile.fatGoal) * 100)) / 100}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute text-xs font-black text-gray-800 dark:text-gray-100">{eatenFat}g</span>
-              </div>
-              <p className="text-xs font-bold text-gray-800 dark:text-gray-200">Fat</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Target: {profile.fatGoal}g</p>
-            </div>
+            ))}
           </div>
 
           <div className="bg-gray-50 dark:bg-gray-850 rounded-2xl p-3 flex justify-between items-center">
@@ -479,7 +529,7 @@ export default function Dashboard({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* Visual Water Tracker Card */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-4">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800 pb-2">
             <h4 className="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
               <Droplet className="w-4.5 h-4.5 text-blue-500 fill-current" />
@@ -530,7 +580,7 @@ export default function Dashboard({
         </div>
 
         {/* Fast Exercise Log Card */}
-        <form onSubmit={handleAddExerciseSubmit} className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-4">
+        <form onSubmit={handleAddExerciseSubmit} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800 pb-2">
             <h4 className="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
               <Dumbbell className="w-4.5 h-4.5 text-orange-500" />
@@ -575,7 +625,7 @@ export default function Dashboard({
         </form>
 
         {/* Quick Weight Update Card */}
-        <form onSubmit={handleAddWeightSubmit} className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-4">
+        <form onSubmit={handleAddWeightSubmit} className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800 pb-2">
             <h4 className="text-sm font-extrabold text-gray-900 dark:text-white flex items-center gap-1.5">
               <TrendingDown className="w-4.5 h-4.5 text-teal-600" />
@@ -616,7 +666,7 @@ export default function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Weekly Calorie Intake Bars */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-4">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800 pb-3">
             <div>
               <h4 className="font-extrabold text-gray-900 dark:text-white text-sm flex items-center gap-1">
@@ -646,7 +696,7 @@ export default function Dashboard({
         </div>
 
         {/* Body Weight Progress trend area */}
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-4">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] hover:translate-y-[-2px] transition-all duration-300 space-y-4">
           <div className="flex justify-between items-center border-b border-gray-50 dark:border-gray-800 pb-3">
             <div>
               <h4 className="font-extrabold text-gray-900 dark:text-white text-sm flex items-center gap-1">
@@ -684,7 +734,7 @@ export default function Dashboard({
       </div>
 
       {/* ✨ AI-POWERED IMAGEN VISION BOARD & MOTIVATION SECTION */}
-      <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-850 shadow-sm space-y-6 text-left">
+      <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-gray-100/70 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)] space-y-6 text-left">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-50 dark:border-gray-800 pb-3 gap-2">
           <div>
             <h4 className="font-extrabold text-gray-900 dark:text-white text-sm flex items-center gap-1.5">
@@ -778,7 +828,7 @@ export default function Dashboard({
       </div>
 
       {/* Habits Streaks and Motivation Panel */}
-      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/20 dark:to-emerald-900/20 border border-emerald-100 dark:border-emerald-900/40 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-left">
+      <div className="bg-gradient-to-br from-white/30 to-emerald-500/5 dark:from-slate-900/40 dark:to-emerald-500/5 backdrop-blur-xl border border-emerald-500/10 dark:border-emerald-800/30 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-left">
         <div className="md:col-span-1 space-y-1">
           <span className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300 tracking-wider">Motivational Feed</span>
           <h4 className="font-black text-emerald-950 dark:text-white text-lg">Daily Habits & Consistency</h4>
@@ -794,8 +844,8 @@ export default function Dashboard({
               onClick={() => onToggleHabit(habit.id)}
               className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                 habit.completed
-                  ? "bg-white dark:bg-gray-900 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 shadow-sm"
-                  : "bg-emerald-50/50 dark:bg-emerald-950/5 border-emerald-100 dark:border-emerald-900/10 text-emerald-600 dark:text-emerald-400 hover:bg-white dark:hover:bg-gray-800"
+                  ? "bg-white/60 dark:bg-slate-900/60 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 shadow-sm"
+                  : "bg-emerald-50/20 dark:bg-emerald-950/5 border-emerald-100/30 dark:border-emerald-900/10 text-emerald-600 dark:text-emerald-400 hover:bg-white dark:hover:bg-slate-900"
               }`}
             >
               <div className="truncate pr-1">
@@ -815,7 +865,7 @@ export default function Dashboard({
       </div>
 
       {/* Push Notifications Scheduled Reminders Hub */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800/80 p-6 rounded-3xl space-y-4 text-left">
+      <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-gray-100/70 dark:border-slate-800/60 p-6 rounded-3xl space-y-4 text-left shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[0_12px_40px_rgb(0,0,0,0.15)]">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h4 className="font-black text-gray-950 dark:text-white text-base flex items-center gap-2">

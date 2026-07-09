@@ -346,7 +346,7 @@ export function AICoachChat({ profile, todayMacros, messages, setMessages }: AIC
     if (!textToSend.trim()) return;
 
     const userMsg: Message = {
-      id: `m_user_${Date.now()}`,
+      id: `m_user_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
       sender: "user",
       text: textToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -376,7 +376,7 @@ export function AICoachChat({ profile, todayMacros, messages, setMessages }: AIC
       const data = await res.json();
 
       const aiMsg: Message = {
-        id: `m_ai_${Date.now()}`,
+        id: `m_ai_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
         sender: "ai",
         text: data.responseText,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -386,7 +386,7 @@ export function AICoachChat({ profile, todayMacros, messages, setMessages }: AIC
     } catch (err) {
       console.error(err);
       const fallbackMsg: Message = {
-        id: `m_ai_err_${Date.now()}`,
+        id: `m_ai_err_${Date.now()}_${Math.floor(Math.random() * 1000000)}`,
         sender: "ai",
         text: "I had a temporary connection issue. Please make sure your **Gemini API Key** is connected in the Secrets Panel so that OnSpace AI can run full real-time coaching conversations. To help you in the meantime, a balanced protein and low-GI carb plate is always a great choice!",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
